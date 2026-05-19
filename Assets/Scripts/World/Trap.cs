@@ -9,7 +9,7 @@ using UnityEngine;
 ///   - Saw blade: attach to a child of an empty parent that animates left/right.
 ///   - Falling spike: trigger killOnContact only after a timer.
 /// </summary>
-[RequireComponent(typeof(Collider2D))]
+[RequireComponent(typeof(BoxCollider2D))]
 public class Trap : MonoBehaviour
 {
     [Tooltip("If true, killing collisions are active. Toggle off for traps that warm up.")]

@@ -5,7 +5,7 @@ using UnityEngine;
 /// pit colliders at the bottom of the level, etc. Requires a Collider2D set
 /// to "Is Trigger".
 /// </summary>
-[RequireComponent(typeof(Collider2D))]
+[RequireComponent(typeof(BoxCollider2D))]
 public class KillZone : MonoBehaviour
 {
     // Reset is called by Unity when the component is first added — auto-set trigger.

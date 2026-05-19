@@ -20,8 +20,8 @@ public class LevelManager : MonoBehaviour
     [Tooltip("Scene name to load when player presses R to fully restart. Leave blank for current scene.")]
     public string restartSceneName = "";
 
-    [Tooltip("Optional small delay before respawn after death (lets a death animation play).")]
-    public float respawnDelay = 0.4f;
+    [Tooltip("Delay before respawn after death — gives the death animation time to play.")]
+    public float respawnDelay = 1.4f;
 
     void OnEnable()
     {
@@ -60,6 +60,10 @@ public class LevelManager : MonoBehaviour
         var rb = player.GetComponent<Rigidbody2D>();
         if (rb != null) rb.linearVelocity = Vector2.zero;
         player.position = spawnPoint.position;
+
+        // Re-show the sprite and unlock controls (PlayerHealth hid them on Die).
+        var health = player.GetComponent<PlayerHealth>();
+        if (health != null) health.ResetVisuals();
 
         // Make sure rewind history is fresh after respawn.
         if (RewindManager.Instance != null) RewindManager.Instance.ClearAll();

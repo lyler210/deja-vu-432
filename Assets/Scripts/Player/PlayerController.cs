@@ -13,13 +13,13 @@ public class PlayerController : MonoBehaviour
     public float moveSpeed = 7f;
 
     [Tooltip("Initial vertical velocity applied on jump.")]
-    public float jumpForce = 14f;
+    public float jumpForce = 25f;
 
-    [Tooltip("Extra gravity applied while falling for a snappier feel.")]
-    public float fallGravityMultiplier = 2f;
+    [Tooltip("Multiplier on gravity while falling. 1 = normal, 2 = double, 0.5 = half. Values < 1 make the fall slower/floatier.")]
+    public float fallGravityMultiplier = 0.4f;
 
-    [Tooltip("Extra gravity applied when jump is released early (variable jump height).")]
-    public float lowJumpGravityMultiplier = 1.5f;
+    [Tooltip("Multiplier on gravity while rising and the jump button is released. 1 = no variable jump (consistent full jump regardless of tap length).")]
+    public float lowJumpGravityMultiplier = 1f;
 
     [Header("Ground Detection")]
     [Tooltip("Empty child Transform placed at the player's feet.")]
@@ -104,14 +104,18 @@ public class PlayerController : MonoBehaviour
         // Horizontal movement (we set velocity directly so it's responsive)
         rb.linearVelocity = new Vector2(horizontalInput * moveSpeed, rb.linearVelocity.y);
 
-        // Variable jump height / better gravity feel
+        // Variable jump height / fall-speed tuning.
+        // We multiply by rb.gravityScale so the multipliers act as a true scale
+        // on the EFFECTIVE gravity (i.e. multi=0.5 really halves fall gravity).
         if (rb.linearVelocity.y < 0f)
         {
-            rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (fallGravityMultiplier - 1f) * Time.fixedDeltaTime;
+            rb.linearVelocity += Vector2.up * Physics2D.gravity.y * rb.gravityScale
+                                 * (fallGravityMultiplier - 1f) * Time.fixedDeltaTime;
         }
         else if (rb.linearVelocity.y > 0f && !jumpHeld)
         {
-            rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (lowJumpGravityMultiplier - 1f) * Time.fixedDeltaTime;
+            rb.linearVelocity += Vector2.up * Physics2D.gravity.y * rb.gravityScale
+                                 * (lowJumpGravityMultiplier - 1f) * Time.fixedDeltaTime;
         }
     }
 

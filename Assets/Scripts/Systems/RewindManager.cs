@@ -38,6 +38,10 @@ public class RewindManager : MonoBehaviour
     [Tooltip("Tint applied to the player sprite during rewind (optional cue).")]
     public Color rewindTint = new Color(0.6f, 0.8f, 1f, 0.85f);
 
+    [Header("Save Visuals")]
+    [Tooltip("Prefab spawned at the save spot. Should have a SaveMarker component. Wired up by 'Tools → Build Level 1'.")]
+    public GameObject saveMarkerPrefab;
+
     // --- runtime state ---
     private Transform player;
     private Rigidbody2D playerRb;
@@ -47,6 +51,7 @@ public class RewindManager : MonoBehaviour
     private Vector3? savedCheckpoint = null;
     private readonly List<Sample> history = new List<Sample>();
     private bool isRewinding = false;
+    private GameObject currentMarker;
 
     private struct Sample
     {
@@ -118,8 +123,14 @@ public class RewindManager : MonoBehaviour
     public void SaveCheckpoint(Vector3 worldPos)
     {
         savedCheckpoint = worldPos;
-        Debug.Log($"[Rewind] Checkpoint saved at {worldPos}");
         // We intentionally KEEP history so the rewind animation has frames to play.
+
+        // Replace any existing visual marker at the new save spot.
+        if (currentMarker != null) Destroy(currentMarker);
+        if (saveMarkerPrefab != null)
+            currentMarker = Instantiate(saveMarkerPrefab, worldPos, Quaternion.identity);
+
+        Debug.Log($"[Rewind] Checkpoint saved at {worldPos}");
     }
 
     /// <summary>Wipes both the saved checkpoint and the recorded path. Called on death.</summary>
@@ -127,6 +138,11 @@ public class RewindManager : MonoBehaviour
     {
         savedCheckpoint = null;
         history.Clear();
+        if (currentMarker != null)
+        {
+            Destroy(currentMarker);
+            currentMarker = null;
+        }
     }
 
     private void HandleDeath()
