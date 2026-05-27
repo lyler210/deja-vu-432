@@ -53,6 +53,12 @@ public class RewindManager : MonoBehaviour
     private bool isRewinding = false;
     private GameObject currentMarker;
 
+    void Start()
+    {
+        saveKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("save", KeyCode.S.ToString()));
+        rewindKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("rewind", KeyCode.R.ToString()));
+    }
+
     private struct Sample
     {
         public Vector3 position;
