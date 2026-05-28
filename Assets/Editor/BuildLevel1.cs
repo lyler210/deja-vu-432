@@ -38,7 +38,7 @@ public static class BuildLevel1
     static readonly float   PlayerJump     = 25f;
     static readonly float   PlayerFallMult = 0.4f; // <1 = floatier fall (lower = slower)
     static readonly float   PlayerLowJump  = 1f;   // disable variable-jump-height extra gravity
-    static readonly float   CamSmoothTime  = 0.05f; // SmoothDamp time-to-target; lower = tighter follow
+    static readonly float   CamSmoothTime  = 0.08f; // SmoothDamp time-to-target; lower = tighter follow. 0.05 felt jerky on fast vertical drops (May 27 feedback).
     static readonly float   RespawnDelay   = 1.4f; // +1s longer so death lingers
     static readonly Vector2 PitDepthPos    = new Vector2(0f, -13f);
     static readonly Vector2 PitDepthScale  = new Vector2(40f, 1f);

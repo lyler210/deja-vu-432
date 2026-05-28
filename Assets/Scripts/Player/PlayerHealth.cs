@@ -21,6 +21,14 @@ public class PlayerHealth : MonoBehaviour
     private bool isDead = false;
     private float deathTimer = 0f;
 
+    // True from the moment Die() fires until LevelManager calls ResetVisuals().
+    // Used by RewindManager to know it shouldn't sample, save, or rewind while
+    // the player is mid-death-animation (otherwise the "death corpse" position
+    // gets baked into the rewind history and the rewind animation re-visits
+    // the killing hazard).
+    private bool inDeathSequence = false;
+    public bool InDeathSequence => inDeathSequence;
+
     void Update()
     {
         if (isDead)
@@ -34,7 +42,17 @@ public class PlayerHealth : MonoBehaviour
     public void Die()
     {
         if (isDead) return;
+
+        // Don't process death during a rewind. The rewind teleports the player
+        // along their recent trail, which may pass through the same hazard that
+        // killed them. Letting Die() fire mid-rewind leaves the Rigidbody2D in
+        // Kinematic and produces a "walks but can't jump" state once the rewind
+        // coroutine cleans up. The rewind itself fully controls player position
+        // during playback — hazards have no business killing you mid-rewind.
+        if (RewindManager.Instance != null && RewindManager.Instance.IsRewinding) return;
+
         isDead = true;
+        inDeathSequence = true;
         deathTimer = deathCooldown;
 
         // Hide the frog sprite while dead — gives a clear visual cue.
@@ -45,9 +63,18 @@ public class PlayerHealth : MonoBehaviour
         var ctrl = GetComponent<PlayerController>();
         if (ctrl != null) ctrl.inputLocked = true;
 
-        // Stop any residual velocity so we don't keep flying when the sprite is hidden.
+        // Freeze the corpse in place for the death animation. Without this, the
+        // invisible corpse keeps falling under gravity for the full 1.4s respawn
+        // delay (~29 units at gravity -30!) — the camera chases it down then has
+        // to snap back to the spawn point, producing a visible "re-drop". Going
+        // Kinematic stops it cleanly. LevelManager.RespawnAtStart restores
+        // Dynamic before re-showing the player.
         var rb = GetComponent<Rigidbody2D>();
-        if (rb != null) rb.linearVelocity = Vector2.zero;
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.bodyType = RigidbodyType2D.Kinematic;
+        }
 
         // Spawn the death-particle effect at the current player position.
         if (deathEffectPrefab != null)
@@ -60,6 +87,7 @@ public class PlayerHealth : MonoBehaviour
     /// <summary>Called by LevelManager when the player respawns — re-show sprite + unlock input.</summary>
     public void ResetVisuals()
     {
+        inDeathSequence = false;
         var sr = GetComponentInChildren<SpriteRenderer>();
         if (sr != null) sr.enabled = true;
         var ctrl = GetComponent<PlayerController>();

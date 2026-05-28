@@ -1292,9 +1292,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 76cb76413a23a43ce979fd416dcf9b7a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
-  deathCount: 0
-  checkpointsSaved: 0
-  rewindsUsed: 0
+  deathCountDebug: 0
 --- !u!4 &337190892
 Transform:
   m_ObjectHideFlags: 0
@@ -4698,7 +4696,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CameraFollow
   target: {fileID: 17290265}
   offset: {x: 0, y: 1.5, z: -10}
-  smoothTime: 0.05
+  smoothTime: 0.08
   maxSpeed: 200
   minBounds: {x: 0, y: 0}
   maxBounds: {x: 0, y: 0}

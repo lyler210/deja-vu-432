@@ -16,8 +16,9 @@ public class CameraFollow : MonoBehaviour
     public Vector3 offset = new Vector3(0f, 1.5f, -10f);
 
     [Tooltip("Approximate time (seconds) for the camera to reach the target. " +
-             "Lower = snappier follow. ~0.05 is very tight, ~0.2 is loose.")]
-    public float smoothTime = 0.05f;
+             "Lower = snappier follow. ~0.05 is very tight (jerky on fast drops), " +
+             "~0.08 is a good default, ~0.2 is loose.")]
+    public float smoothTime = 0.08f;
 
     [Tooltip("Max units/sec the camera can move. Very high = no speed cap.")]
     public float maxSpeed = 200f;
@@ -43,5 +44,17 @@ public class CameraFollow : MonoBehaviour
         transform.position = Vector3.SmoothDamp(transform.position, desired,
                                                 ref velocity, smoothTime,
                                                 maxSpeed, Time.deltaTime);
+    }
+
+    /// <summary>
+    /// Snap the camera to the target's current position with no smoothing. Use
+    /// after teleports (respawn, scene transitions) so the camera doesn't lerp
+    /// across the world to catch up.
+    /// </summary>
+    public void SnapToTarget()
+    {
+        if (target == null) return;
+        transform.position = target.position + offset;
+        velocity = Vector3.zero;
     }
 }

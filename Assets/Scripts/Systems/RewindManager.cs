@@ -10,11 +10,18 @@ using UnityEngine;
 ///   - REWIND (default: R)  → if a checkpoint exists, plays a brief reverse animation
 ///                            of the player's recent path, then snaps them to that checkpoint.
 ///
-/// On death (PlayerHealth.OnPlayerDeath), the saved checkpoint AND position history are
-/// CLEARED so the player can't cheese death — they go all the way back to the level start.
-/// This is what makes save placement strategic: only useful if you press R before dying.
+/// On death (PlayerHealth.OnPlayerDeath): the player respawns at the level start
+/// (LevelManager handles that), but the SAVED CHECKPOINT survives. Pressing R after
+/// respawning teleports the player back to wherever they last pressed S. Only the
+/// position history is cleared on death so the rewind animation doesn't replay
+/// pre-death frames. (Save was originally cleared on death, but playtesters found
+/// that frustrating — this change came from the May 27 feedback round.)
 ///
-/// This script is a singleton — drop one onto a "Managers" GameObject in your scene.
+/// The saved checkpoint clears naturally when the scene unloads (level complete,
+/// level reload, going to LevelSelect), because the whole Managers GameObject is
+/// destroyed and the new scene gets a fresh RewindManager.
+///
+/// Singleton-per-scene: drop one onto a "Managers" GameObject in each level scene.
 /// </summary>
 public class RewindManager : MonoBehaviour
 {
@@ -46,6 +53,7 @@ public class RewindManager : MonoBehaviour
     private Transform player;
     private Rigidbody2D playerRb;
     private PlayerController playerController;
+    private PlayerHealth playerHealth;
     private SpriteRenderer playerSprite;
 
     private Vector3? savedCheckpoint = null;
@@ -97,6 +105,7 @@ public class RewindManager : MonoBehaviour
         player = t;
         playerRb = t.GetComponent<Rigidbody2D>();
         playerController = t.GetComponent<PlayerController>();
+        playerHealth = t.GetComponent<PlayerHealth>();
         playerSprite = t.GetComponentInChildren<SpriteRenderer>();
         history.Clear();
         savedCheckpoint = null;
@@ -105,6 +114,15 @@ public class RewindManager : MonoBehaviour
     void Update()
     {
         if (player == null || isRewinding) return;
+
+        // Don't do ANYTHING while the player is mid-death (between Die() and
+        // LevelManager.RespawnAtStart finishing). If we kept sampling here, the
+        // corpse position would get baked into history and the next rewind would
+        // animate the player back through the hazard that just killed them —
+        // which then re-triggers Die() and leaves the Rigidbody in Kinematic
+        // (walks but can't jump). Also blocks save/rewind input during this
+        // window so the player can't queue weird actions mid-respawn.
+        if (playerHealth != null && playerHealth.InDeathSequence) return;
 
         // Save current position as a checkpoint.
         if (Input.GetKeyDown(saveKey))
@@ -153,8 +171,12 @@ public class RewindManager : MonoBehaviour
 
     private void HandleDeath()
     {
-        // If we die we lose our saved point — strategic tension of the mechanic.
-        ClearAll();
+        // SAVE SURVIVES DEATH (Cluster B fix from May 27 feedback).
+        // The player respawns at the level start (LevelManager handles that),
+        // but the saved checkpoint stays put so pressing R after respawning
+        // teleports the player back to it. We clear only the position history
+        // here so the rewind animation doesn't try to replay pre-death frames.
+        history.Clear();
     }
 
     private IEnumerator RewindRoutine()

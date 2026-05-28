@@ -58,15 +58,36 @@ public class LevelManager : MonoBehaviour
         if (player == null || spawnPoint == null) return;
 
         var rb = player.GetComponent<Rigidbody2D>();
-        if (rb != null) rb.linearVelocity = Vector2.zero;
+        if (rb != null)
+        {
+            // Safety: a rewind could in theory leave the body Kinematic if it
+            // got interrupted abnormally. Force it back to Dynamic on every
+            // respawn so the player always returns to a clean, gravity-affected
+            // state. (The InDeathSequence guard in RewindManager should prevent
+            // the interruption in the first place, but cheap insurance.)
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.linearVelocity = Vector2.zero;
+        }
         player.position = spawnPoint.position;
 
         // Re-show the sprite and unlock controls (PlayerHealth hid them on Die).
         var health = player.GetComponent<PlayerHealth>();
         if (health != null) health.ResetVisuals();
 
-        // Make sure rewind history is fresh after respawn.
-        if (RewindManager.Instance != null) RewindManager.Instance.ClearAll();
+        // Snap the camera straight to the spawn position — no smooth-damp lerp.
+        // Otherwise the camera would slide back from wherever the corpse was
+        // when the death animation ended, which feels like a second "drop".
+        if (Camera.main != null)
+        {
+            var follow = Camera.main.GetComponent<CameraFollow>();
+            if (follow != null) follow.SnapToTarget();
+        }
+
+        // NOTE: We deliberately DO NOT clear the saved rewind point here. Saves
+        // survive death — the player respawns at start but can still press R to
+        // teleport back to wherever they last pressed S. RewindManager.HandleDeath
+        // has already cleared the position history so the rewind animation starts
+        // clean from this fresh respawn position.
     }
 
     /// <summary>Hard-reset the whole scene (e.g., from a pause menu).</summary>

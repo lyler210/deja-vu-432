@@ -60,12 +60,12 @@ public class HUD : MonoBehaviour
         // Background panel for readability.
         GUI.Box(new Rect(10, 10, 290, 110), "");
 
-        int deaths = GameManager.Instance != null ? GameManager.Instance.deathCount : 0;
+        int deaths = GameManager.DeathCount;
         bool hasCheckpoint = RewindManager.Instance != null && RewindManager.Instance.HasCheckpoint;
         bool rewinding = RewindManager.Instance != null && RewindManager.Instance.IsRewinding;
 
         GUI.Label(new Rect(20, 14,  280, 20), "Move: ←/→ or A/D    Jump: Space", labelStyle);
-        GUI.Label(new Rect(20, 34,  280, 20), "Save (S)    Rewind (R)",                    labelStyle);
+        GUI.Label(new Rect(20, 34,  280, 20), "Save (S)  ·  Rewind (R, even after dying)", labelStyle);
         GUI.Label(new Rect(20, 58,  240, 20), $"Deaths: {deaths}",          labelStyle);
         GUI.Label(new Rect(20, 78,  240, 20),
             hasCheckpoint ? "Checkpoint: SAVED  (R to rewind)" : "Checkpoint: none",

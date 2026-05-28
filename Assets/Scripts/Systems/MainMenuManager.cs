@@ -15,6 +15,8 @@ public class MainMenuManager : MonoBehaviour
 
     void StartGame()
     {
+        // Reset the run-wide death counter so each "Start" launches a fresh run.
+        GameManager.ResetStats();
         SceneManager.LoadScene("LevelSelect");
     }
 
